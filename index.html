@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f3ec">
+  <meta name="description" content="A little wordplay, whenever you like. Free five-letter puzzles, with no daily limit.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Five Letters">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Five Letters · Games for One</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Games for One home"><span class="brand-mark" aria-hidden="true">g<span>1</span></span><span>games for one</span></a>
+      <button class="icon-button" id="help-button" aria-label="How to play">?</button>
+    </header>
+    <main>
+      <div class="intro"><p class="eyebrow">YOUR OWN LITTLE WORD BREAK</p><h1>Five Letters<span>.</span></h1><p class="subtitle">One word. Six guesses. All the time you like.</p></div>
+      <section class="game" aria-label="Five Letters word game">
+        <div class="game-toolbar"><button id="collection-button" class="collection-button" disabled><span class="grid-icon" aria-hidden="true">▦</span> <span id="puzzle-label">Your collection</span><span aria-hidden="true">⌄</span></button><span class="saved-indicator" id="save-status">Just for you</span></div>
+        <div id="board" class="board" role="group" aria-label="Guess board: six rows of five letters"></div>
+        <p id="message" class="message" role="status" aria-live="polite">Getting your puzzles ready…</p>
+        <div id="result" class="result" hidden><div><h2 id="result-title"></h2><p id="result-detail"></p></div><button id="next-button" class="primary-button">Next puzzle <span aria-hidden="true">→</span></button></div>
+        <div id="keyboard" class="keyboard" role="group" aria-label="Letter keyboard"></div>
+        <div class="legend" aria-label="Colour key"><span><i class="correct">✓</i>Right spot</span><span><i class="present">↔</i>Wrong spot</span><span><i class="absent">–</i>Not in word</span></div>
+      </section>
+      <div class="bottom-note"><span class="small-spark" aria-hidden="true">✳</span><p>A little challenge. A little time for yourself.</p><span class="quiet-note">No timers. No daily limits.</span></div>
+    </main>
+    <footer><span>MADE FOR YOUR OWN PACE</span><button id="about-button">About & privacy</button></footer>
+  </div>
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-top"><p class="eyebrow">A MOMENT OF WORDPLAY</p><button class="icon-button" data-close aria-label="Close instructions">×</button></div><h2 id="help-title">Make every letter count.</h2><p>Find the five-letter word in six guesses. Each guess must be a real word. You can use the keyboard below or your own keyboard.</p><div class="example" aria-label="Example: P is in the right spot, A belongs elsewhere, R is not in the word"><span class="correct">P<small>✓</small></span><span class="present">A<small>↔</small></span><span class="absent">R<small>–</small></span></div><p><strong>Teal ✓</strong> means the right letter in the right spot.<br><strong>Ochre ↔</strong> means the letter belongs somewhere else.<br><strong>Grey –</strong> means no more copies of that letter are needed.</p><p>Letters can appear more than once. Each coloured tile accounts for one copy of a letter.</p><p>Open your collection to switch puzzles anytime. Your place is saved on this device.</p><button class="primary-button" data-close>Let’s play →</button></dialog>
+  <dialog id="collection-dialog" aria-labelledby="collection-title"><div class="dialog-top"><p class="eyebrow">NO NEED TO WAIT FOR TOMORROW</p><button class="icon-button" data-close aria-label="Close collection">×</button></div><h2 id="collection-title">Your word collection.</h2><p id="collection-summary"></p><p class="collection-key">✓ Solved · – Finished · • In progress</p><div id="puzzle-list" class="puzzle-list"></div></dialog>
+  <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-top"><p class="eyebrow">GAMES FOR ONE</p><button class="icon-button" data-close aria-label="Close about">×</button></div><h2 id="about-title">Just you and a good puzzle.</h2><p>Free to play. No accounts, ads, tracking, or subscriptions. This is an independent word game, not affiliated with The New York Times.</p><p>Your guesses and progress stay in this browser’s local storage. They don’t sync between devices and can be lost if you clear website data or use private browsing.</p><p>On iPhone, open the published website in Safari, tap Share, then Add to Home Screen. Once the game has downloaded, it can also work offline.</p><p id="offline-status">Checking offline availability…</p><p>Accepted guesses use the open-source <a href="https://github.com/sindresorhus/word-list">word-list</a> dictionary. <a href="./DICTIONARY-LICENSE.txt">Dictionary licence</a>.</p></dialog>
+  <noscript>This game needs JavaScript enabled in your browser.</noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
