@@ -1,5 +1,5 @@
-const CACHE = 'five-letters-v4';
-const FILES = ['./', './index.html', './styles.css', './app.js', './engine.js', './stats.js', './navigation.js', './thread.js', './thread-engine.js', './trails.js', './trails-engine.js', './trails-puzzles.js', './trails-preloaded.js', './trails-generator.js', './trails-worker.js', './midi.js', './midi-engine.js', './midi-puzzles.js', './WORDNET-LICENSE.txt', './trails-dictionary.txt', './dictionary.json', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './DICTIONARY-LICENSE.txt'];
+const CACHE = 'five-letters-v5';
+const FILES = ['./', './index.html', './styles.css', './app.js', './engine.js', './stats.js', './navigation.js', './thread.js', './thread-engine.js', './trails.js', './trails-engine.js', './trails-puzzles.js', './trails-preloaded.js', './trails-generator.js', './trails-worker.js', './midi.js', './midi-engine.js', './midi-puzzles.js', './midi-legacy-puzzles.js', './WORDNET-LICENSE.txt', './trails-dictionary.txt', './dictionary.json', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './DICTIONARY-LICENSE.txt'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES.map(path => new Request(path, { cache: 'reload' })))));
 });

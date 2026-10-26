@@ -1,22 +1,23 @@
-import{MIDIS,freshMidi,currentEntry,solved,writeCell,checkCells,revealCells,moveEntry,advanceCell,validMidiState}from'./midi-engine.js';
-const $=id=>document.getElementById(id),KEY='games-for-one.midi.v1';
-let state={version:1,index:0,games:{}},pencil=false,autoCheck=false,paused=false,lastTick=performance.now();
-try{const raw=localStorage.getItem(KEY);if(raw){const s=JSON.parse(raw);if(validMidiState(s))state=s;}}catch{}
-const puzzle=()=>MIDIS[state.index];const game=()=>state.games[puzzle().id]||=(freshMidi(puzzle()));
+import{MIDIS,LEGACY_MIDIS,ALL_MIDIS,migrateMidiState,freshMidi,currentEntry,solved,writeCell,checkCells,revealCells,moveEntry,advanceCell,validMidiState}from'./midi-engine.js';
+const $=id=>document.getElementById(id),KEY='games-for-one.midi.v2';
+let state={version:2,index:0,games:{}},pencil=false,autoCheck=false,paused=false,lastTick=performance.now();
+try{const raw=localStorage.getItem(KEY);if(raw){const s=JSON.parse(raw);if(validMidiState(s))state=s;}else{const old=localStorage.getItem('games-for-one.midi.v1');if(old){const migrated=migrateMidiState(JSON.parse(old));if(migrated)state=migrated;}}}catch{}
+const puzzle=()=>ALL_MIDIS[state.index];const game=()=>state.games[puzzle().id]||=(freshMidi(puzzle()));
 const allCells=()=>[...puzzle().solution].flatMap((l,i)=>l==='#'?[]:[i]);
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('midi-save').textContent='Saved on this device';}catch{$('midi-save').textContent='Progress won’t be saved';}}
 function message(text){$('midi-message').textContent=text;}
 function time(){const seconds=Math.floor(game().seconds);return`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;}
 function render(){const p=puzzle(),g=game(),entry=currentEntry(p,g);
- $('midi-puzzle-label').textContent=`Puzzle ${String(state.index+1).padStart(3,'0')}`;
- const wins=MIDIS.filter(p=>state.games[p.id]?.completed).length;
+ $('midi-puzzle-label').textContent=`${p.size===7?'Earlier ':''}Puzzle ${String((state.index%MIDIS.length)+1).padStart(3,'0')}`;
+ const wins=ALL_MIDIS.filter(p=>state.games[p.id]?.completed).length;
  $('midi-stats').textContent=`${wins} completed · ${g.assisted?'Assisted solve':'Unassisted'}${g.completed?' · Finished':''}`;
  $('midi-timer').textContent=time();$('midi-pause').textContent=paused?'Resume':'Pause';$('midi-pause').disabled=g.completed;
+ $('midi-grid').style.setProperty('--grid-size',p.size);$('midi-grid').setAttribute('aria-label',`Crossword grid, ${p.size} rows and columns`);
  $('midi-grid').replaceChildren();const numbers=new Map(p.entries.map(e=>[e.cells[0],e.number]));
  for(let i=0;i<p.solution.length;i++){if(p.solution[i]==='#'){const block=document.createElement('span');block.className='cross-block';block.setAttribute('aria-hidden','true');$('midi-grid').append(block);continue;}
   const button=document.createElement('button');button.type='button';button.dataset.cell=i;
   button.className=`cross-cell ${entry.cells.includes(i)?'entry-selected':''} ${g.selected===i?'cell-selected':''} ${g.pencil.includes(i)?'pencil-cell':''} ${g.wrong.includes(i)?'wrong-cell':''} ${g.revealed.includes(i)?'revealed-cell':''}`;
-  button.setAttribute('aria-label',`${numbers.has(i)?numbers.get(i)+', ':''}row ${Math.floor(i/7)+1}, column ${i%7+1}, ${g.letters[i]||'empty'}${g.wrong.includes(i)?', incorrect':''}${g.revealed.includes(i)?', revealed':''}`);
+  button.setAttribute('aria-label',`${numbers.has(i)?numbers.get(i)+', ':''}row ${Math.floor(i/p.size)+1}, column ${i%p.size+1}, ${g.letters[i]||'empty'}${g.wrong.includes(i)?', incorrect':''}${g.revealed.includes(i)?', revealed':''}`);
   button.setAttribute('aria-selected',String(g.selected===i));button.tabIndex=g.selected===i?0:-1;
   if(numbers.has(i)){const n=document.createElement('small');n.textContent=numbers.get(i);button.append(n);}
   const letter=document.createElement('span');letter.textContent=g.letters[i];button.append(letter);
@@ -37,7 +38,7 @@ function handleKey(key){if($('midi-screen').hidden||paused||document.querySelect
  else if(key==='Delete'){writeCell(p,g,'');}
  else if(key==='Enter'||key===' '){g.direction=g.direction==='across'?'down':'across';}
  else if(key==='Tab'||key==='ShiftTab'){moveEntry(p,g,key==='Tab'?1:-1);}
- else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(key)){const step={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7}[key];g.direction=Math.abs(step)===1?'across':'down';let next=g.selected+step;while(next>=0&&next<49&&(Math.abs(step)===7||Math.floor(next/7)===Math.floor(g.selected/7))){if(p.solution[next]!=='#'){g.selected=next;break;}next+=step;}}
+ else if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(key)){const step={ArrowLeft:-1,ArrowRight:1,ArrowUp:-p.size,ArrowDown:p.size}[key];g.direction=Math.abs(step)===1?'across':'down';let next=g.selected+step;while(next>=0&&next<p.solution.length&&(Math.abs(step)===p.size||Math.floor(next/p.size)===Math.floor(g.selected/p.size))){if(p.solution[next]!=='#'){g.selected=next;break;}next+=step;}}
  else return;
  save();render();message(g.completed?'Puzzle complete. Nicely done!':'');
 }
@@ -60,10 +61,16 @@ function reveal(scope){revealCells(puzzle(),game(),cellsFor(scope));save();rende
 document.querySelectorAll('[data-reveal]').forEach(b=>b.addEventListener('click',()=>{$('midi-reveal-dialog').close();if(b.dataset.reveal==='puzzle')$('midi-confirm-dialog').showModal();else reveal(b.dataset.reveal);}));
 $('midi-confirm-reveal').addEventListener('click',()=>{$('midi-confirm-dialog').close();reveal('puzzle');});
 $('midi-clues-button').addEventListener('click',()=>{for(const direction of ['across','down']){const list=$('midi-'+direction);list.replaceChildren();for(const entry of puzzle().entries.filter(e=>e.direction===direction)){const b=document.createElement('button');b.className='clue-option';b.textContent=`${entry.number}. ${entry.clue} (${entry.cells.length})`;b.addEventListener('click',()=>{game().selected=entry.cells[0];game().direction=direction;save();render();$('midi-clues-dialog').close();});list.append(b);}}$('midi-clues-dialog').showModal();});
-function collection(){const pack=$('midi-pack');pack.replaceChildren();for(let i=0;i<10;i++)pack.add(new Option(`Pack ${i+1} · puzzles ${i*12+1}–${(i+1)*12}`,String(i)));pack.value=String(Math.floor(state.index/12));pack.onchange=drawCollection;drawCollection();$('midi-collection-dialog').showModal();}
-function drawCollection(){const first=Number($('midi-pack').value)*12;$('midi-puzzle-list').replaceChildren();MIDIS.slice(first,first+12).forEach((p,i)=>{const b=document.createElement('button');b.className=`puzzle-choice ${state.games[p.id]?.completed?'won':''}`;b.textContent=`${first+i+1}${state.games[p.id]?.completed?' ✓':''}`;b.setAttribute('aria-label',`Midi puzzle ${first+i+1}`);b.addEventListener('click',()=>{state.index=first+i;paused=false;game();save();render();$('midi-collection-dialog').close();message('A fresh crossword. Enjoy.');});$('midi-puzzle-list').append(b);});}
+function collection(){
+ $('midi-edition').value=state.index>=MIDIS.length?'legacy':'new';
+ $('midi-edition').onchange=()=>{populatePacks(0);drawCollection();};
+ populatePacks(Math.floor((state.index%MIDIS.length)/12));drawCollection();$('midi-collection-dialog').showModal();
+}
+function populatePacks(selected){const pack=$('midi-pack');pack.replaceChildren();const count=$('midi-edition').value==='legacy'?LEGACY_MIDIS.length:MIDIS.length;for(let i=0;i<Math.ceil(count/12);i++)pack.add(new Option(`Pack ${i+1} · puzzles ${i*12+1}–${Math.min((i+1)*12,count)}`,String(i)));pack.value=String(selected);pack.onchange=drawCollection;}
+function drawCollection(){const offset=$('midi-edition').value==='legacy'?MIDIS.length:0,first=Number($('midi-pack').value)*12;
+ $('midi-puzzle-list').replaceChildren();ALL_MIDIS.slice(offset+first,offset+first+12).forEach((p,i)=>{const b=document.createElement('button');b.className=`puzzle-choice ${state.games[p.id]?.completed?'won':''}`;b.textContent=`${first+i+1}${state.games[p.id]?.completed?' ✓':''}`;b.setAttribute('aria-label',`${offset?'Earlier ':''}Midi puzzle ${first+i+1}`);b.addEventListener('click',()=>{state.index=offset+first+i;paused=false;game();save();render();$('midi-collection-dialog').close();message('A fresh crossword. Enjoy.');});$('midi-puzzle-list').append(b);});}
 $('midi-collection-button').addEventListener('click',collection);
-$('midi-next').addEventListener('click',()=>{for(let offset=1;offset<=MIDIS.length;offset++){const index=(state.index+offset)%MIDIS.length;if(!state.games[MIDIS[index].id]?.completed){state.index=index;paused=false;game();save();render();message('A new crossword is ready.');return;}}collection();});
+$('midi-next').addEventListener('click',()=>{const offset=state.index>=MIDIS.length?MIDIS.length:0,count=offset?LEGACY_MIDIS.length:MIDIS.length;for(let step=1;step<=count;step++){const index=offset+(state.index-offset+step)%count;if(!state.games[ALL_MIDIS[index].id]?.completed){state.index=index;paused=false;game();save();render();message('A new crossword is ready.');return;}}collection();});
 $('midi-help').addEventListener('click',()=>$('midi-help-dialog').showModal());
 setInterval(()=>{const now=performance.now(),elapsed=Math.min((now-lastTick)/1000,2);lastTick=now;if(!$('midi-screen').hidden&&!document.hidden&&!paused&&!document.querySelector('dialog[open]')&&!game().completed){game().seconds+=elapsed;$('midi-timer').textContent=time();save();}},1000);
 document.addEventListener('visibilitychange',()=>{lastTick=performance.now();save();});

@@ -47,3 +47,8 @@ h1[tabindex="-1"]:focus{outline:none}
 .midi-grid-area{container-type:size}
 .cross-grid{width:min(100cqw,100cqh,350px);height:min(100cqw,100cqh,350px);max-width:100%;max-height:100%;aspect-ratio:1;flex-shrink:0}
 .letters-art{white-space:nowrap;letter-spacing:0;font-size:16px}
+/* Give Midi more of the available screen while supporting the saved 7×7 archive. */
+.cross-grid{grid-template-columns:repeat(var(--grid-size,8),minmax(0,1fr));grid-template-rows:repeat(var(--grid-size,8),minmax(0,1fr));width:min(100cqw,100cqh,400px);height:min(100cqw,100cqh,400px)}
+#midi-screen .play-heading{height:40px}#midi-screen .stats-bar{height:22px}.midi-clue-bar{height:50px}.midi-game .key{height:40px}.midi-game .message{height:22px;min-height:22px}.midi-save{height:12px;line-height:12px}.cross-cell{font-size:clamp(14px,3vh,24px)}
+@media(max-height:600px){#midi-screen .stats-bar{height:20px}.midi-game .key{height:36px}.midi-clue-bar{height:50px}.cross-cell small{font-size:7px}}
+@media(max-height:450px) and (min-width:600px){.midi-game .key{height:30px}.midi-clue-bar{height:50px}.cross-cell{font-size:18px}}
