@@ -1,7 +1,7 @@
-const CACHE = 'five-letters-v1';
-const FILES = ['./', './index.html', './styles.css', './app.js', './engine.js', './dictionary.json', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './DICTIONARY-LICENSE.txt'];
+const CACHE = 'five-letters-v2';
+const FILES = ['./', './index.html', './styles.css', './app.js', './engine.js', './stats.js', './navigation.js', './thread.js', './thread-engine.js', './dictionary.json', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './DICTIONARY-LICENSE.txt'];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES.map(path => new Request(path, { cache: 'reload' })))));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('five-letters-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));

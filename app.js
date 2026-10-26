@@ -1,3 +1,4 @@
+import { streaks } from './stats.js';
 import { ANSWERS, scoreGuess, outcome, keyboardScores, freshState, validState } from './engine.js';
 
 const $ = id => document.getElementById(id);
@@ -23,6 +24,9 @@ function save() {
 
 function render() {
   const current = game();
+  const stats = streaks((state.results || []).map(word => outcome(state.games[word], word)));
+  const wins = Object.entries(state.games).filter(([word, entry]) => outcome(entry, word) === 'won').length;
+  $('five-stats').textContent = `${wins} wins · ${stats.current} current streak · ${stats.best} best streak`;
   const status = outcome(current, answer());
   const keys = keyboardScores(current.guesses, answer());
   $('puzzle-label').textContent = `Puzzle ${String(state.index + 1).padStart(3, '0')}`;
@@ -68,7 +72,7 @@ function render() {
 }
 
 function input(key) {
-  if (!ready || document.querySelector('dialog[open]') || outcome(game(), answer()) !== 'playing') return;
+  if ($('five-screen').hidden || !ready || document.querySelector('dialog[open]') || outcome(game(), answer()) !== 'playing') return;
   const current = game();
   if (key === 'Backspace') {
     current.draft = current.draft.slice(0, -1);
@@ -81,6 +85,8 @@ function input(key) {
     current.guesses.push(guess);
     current.draft = '';
     const status = outcome(current, answer());
+    state.results ||= [];
+    if (status !== 'playing' && !state.results.includes(answer())) state.results.push(answer());
     message(status === 'won' ? `You found ${answer()} in ${current.guesses.length} guesses!` : status === 'lost' ? `The word was ${answer()}. A fresh puzzle is waiting.` : `${guess}: ${scoreGuess(guess, answer()).filter(score => score === 'correct').length} in the right spot, ${scoreGuess(guess, answer()).filter(score => score === 'present').length} elsewhere.`);
   } else if (/^[A-Z]$/.test(key)) {
     if (current.draft.length === 5) return;
@@ -109,7 +115,7 @@ for (const letters of ['Q W E R T Y U I O P', 'A S D F G H J K L', 'Enter Z X C 
 }
 
 document.addEventListener('keydown', event => {
-  if (event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]')) return;
+  if ($('five-screen').hidden || event.ctrlKey || event.metaKey || event.altKey || document.querySelector('dialog[open]')) return;
   if (event.key === 'Enter' && event.target.closest('button, a')) return;
   if (/^[a-z]$/i.test(event.key) || ['Backspace', 'Enter'].includes(event.key)) {
     event.preventDefault();
@@ -160,7 +166,7 @@ $('next-button').addEventListener('click', () => {
   }
   openCollection();
 });
-$('help-button').addEventListener('click', () => $('help-dialog').showModal());
+$('five-help').addEventListener('click', () => $('help-dialog').showModal());
 $('about-button').addEventListener('click', () => $('about-dialog').showModal());
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => { if (event.target === dialog) { const bounds = dialog.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close(); } }));

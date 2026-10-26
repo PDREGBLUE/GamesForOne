@@ -6,21 +6,31 @@
   <meta name="theme-color" content="#f6f3ec">
   <meta name="description" content="A little wordplay, whenever you like. Free five-letter puzzles, with no daily limit.">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Five Letters">
+  <meta name="apple-mobile-web-app-title" content="Games for One">
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css">
-  <title>Five Letters · Games for One</title>
+  <title>Games for One</title>
 </head>
 <body>
   <div class="app-shell">
     <header class="site-header">
-      <a class="brand" href="./" aria-label="Games for One home"><span class="brand-mark" aria-hidden="true">g<span>1</span></span><span>games for one</span></a>
-      <button class="icon-button" id="help-button" aria-label="How to play">?</button>
+      <a class="brand" href="#home" aria-label="Games for One home"><span class="brand-mark" aria-hidden="true">g<span>1</span></span><span>games for one</span></a>
+      <span class="header-note">Play at your own pace</span>
     </header>
     <main>
-      <div class="intro"><p class="eyebrow">YOUR OWN LITTLE WORD BREAK</p><h1>Five Letters<span>.</span></h1><p class="subtitle">One word. Six guesses. All the time you like.</p></div>
+      <section id="home-screen" class="home-screen" aria-labelledby="home-title">
+        <p class="eyebrow">A LITTLE TIME FOR YOURSELF</p><h1 id="home-title">Pick your puzzle.</h1>
+        <p class="subtitle">Your collection. Your pace.</p>
+        <div class="game-cards">
+          <a class="game-card" href="#five-letters"><span class="card-art letters-art" aria-hidden="true">F I V E</span><h2>Five Letters</h2><p>One word. Six guesses.</p><span>274 puzzles <b>Play →</b></span></a>
+          <a class="game-card" href="#common-thread"><span class="card-art thread-art" aria-hidden="true">● ━ ●<br>● ━ ●</span><h2>Common Thread</h2><p>Sixteen words. Four hidden groups.</p><span>12 puzzles <b>Play →</b></span></a>
+        </div><p class="coming-soon">Mini & Midi crosswords · Coming later</p>
+      </section>
+      <section id="five-screen" class="play-screen" hidden>
+      <div class="play-heading"><a href="#home" class="back-link">← Games</a><h1>Five Letters</h1><button class="icon-button" id="five-help" aria-label="Five Letters instructions">?</button></div>
+      <div class="stats-bar" id="five-stats" aria-label="Five Letters statistics"></div>
       <section class="game" aria-label="Five Letters word game">
         <div class="game-toolbar"><button id="collection-button" class="collection-button" disabled><span class="grid-icon" aria-hidden="true">▦</span> <span id="puzzle-label">Your collection</span><span aria-hidden="true">⌄</span></button><span class="saved-indicator" id="save-status">Just for you</span></div>
         <div id="board" class="board" role="group" aria-label="Guess board: six rows of five letters"></div>
@@ -29,14 +39,31 @@
         <div id="keyboard" class="keyboard" role="group" aria-label="Letter keyboard"></div>
         <div class="legend" aria-label="Colour key"><span><i class="correct">✓</i>Right spot</span><span><i class="present">↔</i>Wrong spot</span><span><i class="absent">–</i>Not in word</span></div>
       </section>
-      <div class="bottom-note"><span class="small-spark" aria-hidden="true">✳</span><p>A little challenge. A little time for yourself.</p><span class="quiet-note">No timers. No daily limits.</span></div>
+      </section>
+      <section id="thread-screen" class="play-screen" hidden>
+        <div class="play-heading"><a href="#home" class="back-link">← Games</a><h1>Common Thread</h1><button class="icon-button" id="thread-help" aria-label="Common Thread instructions">?</button></div>
+        <div class="stats-bar" id="thread-stats" aria-label="Common Thread statistics"></div>
+        <section class="thread-game" aria-label="Common Thread grouping game">
+          <div class="game-toolbar"><button id="thread-collection-button" class="collection-button">▦ <span id="thread-puzzle-label">Puzzle 001</span> ⌄</button><span id="thread-save" class="saved-indicator"></span></div>
+          <p class="thread-prompt">Find four groups of four related words.</p><div class="difficulty-key" aria-label="Difficulty from easiest to hardest"><span class="group-0">1 · Easy</span><span class="group-1">2 · Tricky</span><span class="group-2">3 · Hard</span><span class="group-3">4 · Wordplay</span></div>
+          <div id="thread-board" class="thread-board"></div>
+          <p id="thread-message" class="message" role="status" aria-live="polite">Select four words that share a connection.</p>
+          <p id="thread-lives" class="thread-lives"></p>
+          <div id="thread-controls" class="thread-controls"><button id="thread-shuffle" class="secondary-button">Shuffle</button><button id="thread-clear" class="secondary-button">Deselect</button><button id="thread-submit" class="primary-button" disabled>Submit</button></div>
+          <div id="thread-result" class="result" hidden><div><h2 id="thread-result-title"></h2><p id="thread-result-detail"></p></div><button id="thread-next" class="primary-button">Next puzzle →</button></div>
+        </section>
+      </section>
     </main>
     <footer><span>MADE FOR YOUR OWN PACE</span><button id="about-button">About & privacy</button></footer>
   </div>
-  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-top"><p class="eyebrow">A MOMENT OF WORDPLAY</p><button class="icon-button" data-close aria-label="Close instructions">×</button></div><h2 id="help-title">Make every letter count.</h2><p>Find the five-letter word in six guesses. Each guess must be a real word. You can use the keyboard below or your own keyboard.</p><div class="example" aria-label="Example: P is in the right spot, A belongs elsewhere, R is not in the word"><span class="correct">P<small>✓</small></span><span class="present">A<small>↔</small></span><span class="absent">R<small>–</small></span></div><p><strong>Teal ✓</strong> means the right letter in the right spot.<br><strong>Ochre ↔</strong> means the letter belongs somewhere else.<br><strong>Grey –</strong> means no more copies of that letter are needed.</p><p>Letters can appear more than once. Each coloured tile accounts for one copy of a letter.</p><p>Open your collection to switch puzzles anytime. Your place is saved on this device.</p><button class="primary-button" data-close>Let’s play →</button></dialog>
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-top"><p class="eyebrow">A MOMENT OF WORDPLAY</p><button class="icon-button" data-close aria-label="Close instructions">×</button></div><h2 id="help-title">Make every letter count.</h2><p>Find the five-letter word in six guesses. Each guess must be a real word. You can use the keyboard below or your own keyboard.</p><div class="example" aria-label="Example: P is in the right spot, A belongs elsewhere, R is not in the word"><span class="correct">P<small>✓</small></span><span class="present">A<small>↔</small></span><span class="absent">R<small>–</small></span></div><p><strong>Teal ✓</strong> means the right letter in the right spot.<br><strong>Ochre ↔</strong> means the letter belongs somewhere else.<br><strong>Grey –</strong> means no more copies of that letter are needed.</p><p>Letters can appear more than once. Each coloured tile accounts for one copy of a letter.</p><p>Open your collection to switch puzzles anytime. Your place is saved on this device.</p><p>A streak counts consecutive puzzle wins, not days. Losing a puzzle resets it; switching puzzles or taking a break does not. Past wins are included in your total. Streak tracking starts with this update because earlier completion order wasn’t recorded.</p><button class="primary-button" data-close>Let’s play →</button></dialog>
   <dialog id="collection-dialog" aria-labelledby="collection-title"><div class="dialog-top"><p class="eyebrow">NO NEED TO WAIT FOR TOMORROW</p><button class="icon-button" data-close aria-label="Close collection">×</button></div><h2 id="collection-title">Your word collection.</h2><p id="collection-summary"></p><p class="collection-key">✓ Solved · – Finished · • In progress</p><div id="puzzle-list" class="puzzle-list"></div></dialog>
   <dialog id="about-dialog" aria-labelledby="about-title"><div class="dialog-top"><p class="eyebrow">GAMES FOR ONE</p><button class="icon-button" data-close aria-label="Close about">×</button></div><h2 id="about-title">Just you and a good puzzle.</h2><p>Free to play. No accounts, ads, tracking, or subscriptions. This is an independent word game, not affiliated with The New York Times.</p><p>Your guesses and progress stay in this browser’s local storage. They don’t sync between devices and can be lost if you clear website data or use private browsing.</p><p>On iPhone, open the published website in Safari, tap Share, then Add to Home Screen. Once the game has downloaded, it can also work offline.</p><p id="offline-status">Checking offline availability…</p><p>Accepted guesses use the open-source <a href="https://github.com/sindresorhus/word-list">word-list</a> dictionary. <a href="./DICTIONARY-LICENSE.txt">Dictionary licence</a>.</p></dialog>
+  <dialog id="thread-help-dialog" aria-labelledby="thread-help-title"><div class="dialog-top"><p class="eyebrow">FIND WHAT BELONGS TOGETHER</p><button class="icon-button" data-close aria-label="Close Common Thread instructions">×</button></div><h2 id="thread-help-title">Find the common thread.</h2><p>Select four words with something in common, then tap Submit. Find all four groups to win. Categories may be everyday things, double meanings, or words that complete a phrase.</p><p>Each puzzle has four difficulty levels: <strong>1 Straightforward</strong>, <strong>2 Tricky</strong>, <strong>3 Hard</strong>, and <strong>4 Wordplay</strong>. The final group may involve sounds, spelling, hidden words or a change to the words. Some words suggest more than one connection; look for a solution that uses all sixteen.</p><p>You have four mistakes. “One away” means three of your selected words belong together. A repeated incorrect selection doesn’t cost another mistake. Shuffle changes only the arrangement.</p><p>When you run out of mistakes, the remaining groups are revealed. Your progress, wins and consecutive-win streak are saved on this device. Breaks and switching puzzles don’t reset a streak; losing does.</p></dialog>
+  <dialog id="thread-collection-dialog" aria-labelledby="thread-collection-title"><div class="dialog-top"><p class="eyebrow">YOUR COLLECTION</p><button class="icon-button" data-close aria-label="Close Common Thread collection">×</button></div><h2 id="thread-collection-title">Common Thread</h2><p id="thread-summary"></p><div id="thread-puzzle-list" class="puzzle-list"></div></dialog>
   <noscript>This game needs JavaScript enabled in your browser.</noscript>
   <script type="module" src="./app.js"></script>
+  <script type="module" src="./thread.js"></script>
+  <script type="module" src="./navigation.js"></script>
 </body>
 </html>

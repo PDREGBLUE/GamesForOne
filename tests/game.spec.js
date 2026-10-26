@@ -5,7 +5,7 @@ async function start(page, extra = '') {
   await page.addInitScript(({ key, answers }) => {
     if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ version: 1, order: ['APPLE', ...answers.filter(w => w !== 'APPLE')], index: 0, games: {} }));
   }, { key, answers: ANSWERS });
-  await page.goto('/' + extra);
+  await page.goto('/' + extra + '#five-letters');
   await expect(page.locator('#collection-button')).toBeEnabled();
 }
 async function guess(page, word) {
@@ -57,7 +57,7 @@ test('collection switching keeps unfinished guesses; help blocks typing', async 
   await page.locator('#collection-button').tap();
   await page.getByRole('button', { name: 'Puzzle 1, in progress', exact: true }).tap();
   await expect(page.locator('.board-row').nth(1)).toContainText('AP');
-  await page.locator('#help-button').tap();
+  await page.locator('#five-help').tap();
   await page.keyboard.type('XYZ');
   await page.getByRole('button', { name: 'Close instructions' }).tap();
   await expect(page.locator('.board-row').nth(1)).toHaveText('AP');
@@ -78,7 +78,7 @@ test('storage unavailable still allows play and explains limitation', async ({ p
   await page.addInitScript(() => {
     Storage.prototype.setItem = () => { throw new DOMException('Unavailable', 'QuotaExceededError'); };
   });
-  await page.goto('/');
+  await page.goto('/#five-letters');
   await expect(page.locator('#save-status')).toHaveText('Progress won’t be saved');
   await guess(page, 'CRANE');
   await expect(page.locator('.board-row').first().locator('.tile small')).toHaveCount(5);

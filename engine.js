@@ -45,6 +45,7 @@ export function validState(state, dictionary) {
       !state.order.every(word => ANSWERS.includes(word)) ||
       !Number.isInteger(state.index) || state.index < 0 || state.index >= state.order.length ||
       !state.games || typeof state.games !== 'object' || Array.isArray(state.games)) return false;
+  if (state.results !== undefined && (!Array.isArray(state.results) || new Set(state.results).size !== state.results.length || !state.results.every(word => ANSWERS.includes(word) && state.games[word] && Array.isArray(state.games[word].guesses) && outcome(state.games[word], word) !== 'playing'))) return false;
   return Object.entries(state.games).every(([answer, game]) => {
     if (!ANSWERS.includes(answer) || !game || !Array.isArray(game.guesses) || game.guesses.length > 6 ||
         !game.guesses.every(word => typeof word === 'string' && dictionary.has(word)) ||
