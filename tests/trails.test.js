@@ -5,7 +5,7 @@ import {TRAILS,validPath,spell,freshTrail,chooseCell,submitTrail,takeHint,validT
 import {PUZZLES,ensurePuzzleCount,allWords} from '../thread-engine.js';
 const dictionary=new Set(readFileSync(new URL('../trails-dictionary.txt',import.meta.url),'utf8').split('\n'));
 test('every themed board covers all 48 cells with adjacent words and an opposite-edge spanning word',()=>{
- assert.equal(TRAILS.length,8);
+ assert.equal(TRAILS.length,120);
  for(const p of TRAILS){
   const cells=p.words.flatMap(w=>w.path);assert.equal(cells.length,48);assert.equal(new Set(cells).size,48);
   assert.equal(p.words.filter(w=>w.span).length,1);

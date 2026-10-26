@@ -1,5 +1,6 @@
-import { TRAILS } from './trails-puzzles.js';
-export { TRAILS };
+import { TRAILS as ORIGINAL } from './trails-puzzles.js';
+import { PRELOADED } from './trails-preloaded.js';
+export const TRAILS = [...ORIGINAL,...PRELOADED];
 export const adjacent = (a,b) => a !== b && Math.abs(a % 6 - b % 6) <= 1 && Math.abs(Math.floor(a/6) - Math.floor(b/6)) <= 1;
 export function validPath(path) {
   return Array.isArray(path) && path.length > 0 && new Set(path).size === path.length && path.every((cell,i) => Number.isInteger(cell) && cell >= 0 && cell < 48 && (!i || adjacent(path[i-1],cell)));
@@ -38,7 +39,23 @@ export function takeHint(puzzle,game) {
   if(!target)return false;
   game.hints++;game.hint=target.word;return true;
 }
+export function validTrailPuzzle(p) {
+ if(!p||typeof p.id!=='string'||!/^trail-auto-\d{6,}$/.test(p.id)||typeof p.clue!=='string'||p.clue.length>100||typeof p.letters!=='string'||! /^[A-Z]{48}$/.test(p.letters)||!Array.isArray(p.words)||p.words.length<2||p.words.length>12)return false;
+ const cells=[];const words=new Set();
+ for(const w of p.words){if(!w||typeof w.word!=='string'||! /^[A-Z]{4,48}$/.test(w.word)||words.has(w.word)||typeof w.span!=='boolean'||!validPath(w.path)||spell(p,w.path)!==w.word)return false;words.add(w.word);cells.push(...w.path);}
+ if(cells.length!==48||new Set(cells).size!==48||p.words.filter(w=>w.span).length!==1)return false;
+ const span=p.words.find(w=>w.span).path;
+ return(span.some(i=>i%6===0)&&span.some(i=>i%6===5))||(span.some(i=>i<6)&&span.some(i=>i>=42));
+}
+export function adoptGenerated(puzzles){
+ if(!Array.isArray(puzzles)||puzzles.length>2400||new Set(puzzles.map(p=>p?.id)).size!==puzzles.length||!puzzles.every(validTrailPuzzle))return false;
+ const ids=new Map(TRAILS.map(p=>[p.id,p])),grids=new Map(TRAILS.map(p=>[p.letters,p.id]));
+ for(const p of puzzles){if(ids.has(p.id)&&JSON.stringify(ids.get(p.id))!==JSON.stringify(p))return false;if(grids.has(p.letters)&&grids.get(p.letters)!==p.id)return false;grids.set(p.letters,p.id);}
+ for(const p of puzzles)if(!ids.has(p.id))TRAILS.push(p);
+ return true;
+}
 export function validTrailsState(state,dictionary) {
+ if(state?.generated!==undefined&&!adoptGenerated(state.generated))return false;
   if(!state || state.version!==1 || !Number.isInteger(state.index) || !TRAILS[state.index] || !state.games || typeof state.games!=='object' || Array.isArray(state.games))return false;
   return Object.entries(state.games).every(([id,g])=>{
     const p=TRAILS.find(p=>p.id===id);

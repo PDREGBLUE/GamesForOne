@@ -1,11 +1,11 @@
-import { TRAILS, freshTrail, chooseCell, submitTrail, takeHint, spell, validTrailsState } from './trails-engine.js';
+import { TRAILS, adoptGenerated, freshTrail, chooseCell, submitTrail, takeHint, spell, validTrailsState } from './trails-engine.js';
 const $=id=>document.getElementById(id);
 const KEY='games-for-one.word-trails.v1';
-let state={version:1,index:0,games:{}},dictionary,ready=false,drag=null;
+let state={version:1,index:0,games:{}},dictionary,ready=false,drag=null,packing=false;
 const puzzle=()=>TRAILS[state.index];
 const game=()=>state.games[puzzle().id] ||= freshTrail();
 const done=()=>game().found.length===puzzle().words.length;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));$('trails-save').textContent='Saved on this device';}catch{$('trails-save').textContent='Progress won’t be saved';}}
+function save(){state.generated=TRAILS.slice(120);try{localStorage.setItem(KEY,JSON.stringify(state));$('trails-save').textContent='Saved on this device';}catch{$('trails-save').textContent='Progress won’t be saved';}}
 function message(text){$('trails-message').textContent=text;}
 const svgNS='http://www.w3.org/2000/svg';
 function drawPath(path,type){
@@ -38,7 +38,7 @@ function render(){
   $('trails-hint').textContent=g.hint?'Hint highlighted':credits>=3?'Use hint':`Hint ${credits}/3`;
   $('trails-hint').disabled=credits<3||!!g.hint||done();
   $('trails-controls').hidden=done();$('trails-result').hidden=!done();
-  $('trails-next').textContent=wins===TRAILS.length?'View collection →':'Next puzzle →';
+  $('trails-next').textContent=wins===TRAILS.length?'Next pack →':'Next puzzle →';
   $('trails-found').textContent=g.found.length ? g.found.map(w=>(p.words.find(e=>e.word===w).span?'★ ':'✓ ')+w).join(' · ') : 'Blue: theme words · Gold ★: spanning word';
 }
 function inputCell(cell){if(!ready||done())return;chooseCell(puzzle(),game(),cell);save();render();}
@@ -65,15 +65,29 @@ $('trails-submit').addEventListener('click',submit);
 $('trails-clear').addEventListener('click',()=>{game().selected=[];save();render();message('Path cleared.');});
 $('trails-hint').addEventListener('click',()=>{if(takeHint(puzzle(),game())){save();render();message('The outlined letters form a theme word. Connect them in order.');}});
 function collection(){
+  const pack=$('trails-pack');pack.replaceChildren();for(let i=0;i<Math.ceil(TRAILS.length/12);i++)pack.add(new Option(`Pack ${i+1} · puzzles ${i*12+1}–${Math.min((i+1)*12,TRAILS.length)}`,String(i)));pack.value=String(Math.floor(state.index/12));pack.onchange=drawCollection;drawCollection();$('trails-collection-dialog').showModal();
+}
+function drawCollection(){
   $('trails-puzzle-list').replaceChildren();
-  TRAILS.forEach((p,index)=>{const b=document.createElement('button');const solved=state.games[p.id]?.found.length===p.words.length;b.className=`puzzle-choice ${solved?'won':''}`;b.textContent=`${index+1} ${solved?'✓':''}`;b.setAttribute('aria-label',`Word Trails puzzle ${index+1}`);b.addEventListener('click',()=>{state.index=index;game();save();render();$('trails-collection-dialog').close();message('Follow the clue and find the theme words.');});$('trails-puzzle-list').append(b);});
-  $('trails-collection-dialog').showModal();
+  const first=Number($('trails-pack').value)*12;
+  TRAILS.slice(first,first+12).forEach((p,offset)=>{const index=first+offset;const b=document.createElement('button');const solved=state.games[p.id]?.found.length===p.words.length;b.className=`puzzle-choice ${solved?'won':''}`;b.textContent=`${index+1} ${solved?'✓':''}`;b.setAttribute('aria-label',`Word Trails puzzle ${index+1}`);b.addEventListener('click',()=>{state.index=index;game();save();render();$('trails-collection-dialog').close();message('Follow the clue and find the theme words.');});$('trails-puzzle-list').append(b);});
 }
 $('trails-collection-button').addEventListener('click',()=>{if(ready)collection();});
 $('trails-next').addEventListener('click',()=>{
   for(let offset=1;offset<=TRAILS.length;offset++){const index=(state.index+offset)%TRAILS.length,p=TRAILS[index];if(state.games[p.id]?.found.length!==p.words.length){state.index=index;game();save();render();message('A new theme to unravel.');return;}}
-  collection();
+  makePack();
 });
+
+function makePack(){
+ if(packing)return;packing=true;$('trails-next').disabled=true;$('trails-collection-button').disabled=true;message('Making 12 fresh boards on this device…');
+ const worker=new Worker(new URL('./trails-worker.js',import.meta.url),{type:'module'});
+ const timeout=setTimeout(()=>finish('This pack is taking too long. Please try again.'),180000);
+ function finish(error){clearTimeout(timeout);worker.terminate();packing=false;$('trails-next').disabled=false;$('trails-collection-button').disabled=false;if(error)message(error);}
+ worker.onerror=()=>finish('Couldn’t create the pack. Please try again.');
+ worker.onmessage=({data})=>{if(data.error){finish(data.error);return;}if(data.progress){message(`Preparing your new pack: ${data.progress} of 12 ready.`);return;}if(data.puzzles){const first=TRAILS.length;if(!adoptGenerated(data.puzzles)){finish('Couldn’t validate the pack. Please try again.');return;}state.index=first;game();save();render();finish();message('Your new pack of 12 is ready. Enjoy!');}};
+ const sequences=TRAILS.map(p=>Number(p.id.split('-').at(-1))).filter(Number.isFinite);
+ worker.postMessage({start:Math.max(112,...sequences)+1,existing:TRAILS.map(p=>p.letters)});
+}
 $('trails-help').addEventListener('click',()=>$('trails-help-dialog').showModal());
 async function init(){try{
   const response=await fetch('./trails-dictionary.txt');if(!response.ok)throw Error('dictionary');dictionary=new Set((await response.text()).split('\n'));
