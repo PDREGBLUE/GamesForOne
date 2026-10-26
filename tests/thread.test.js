@@ -4,7 +4,8 @@ import { PUZZLES, allWords, shuffle, submit, evaluate, validThreadState } from '
 import { streaks } from '../stats.js';
 const p = PUZZLES[0];
 test('all original puzzles have four named disjoint groups of four words', () => {
-  assert.equal(new Set(PUZZLES.map(p => p.id)).size, 12);
+  assert.equal(new Set(PUZZLES.map(p => p.id)).size, PUZZLES.length);
+  assert.ok(PUZZLES.length >= 120);
   for (const p of PUZZLES) {
     assert.equal(p.groups.length, 4);
     assert.equal(new Set(allWords(p)).size, 16);

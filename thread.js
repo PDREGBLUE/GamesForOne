@@ -1,4 +1,4 @@
-import { DIFFICULTIES, PUZZLES, allWords, shuffle, evaluate, submit, validThreadState } from './thread-engine.js';
+import { DIFFICULTIES, PUZZLES, ensurePuzzleCount, allWords, shuffle, evaluate, submit, validThreadState } from './thread-engine.js';
 import { streaks } from './stats.js';
 const $ = id => document.getElementById(id);
 const KEY = 'games-for-one.common-thread.v1';
@@ -15,6 +15,7 @@ try {
 const puzzle = () => PUZZLES[state.index];
 const game = () => state.games[puzzle().id] ||= { attempts: [], order: shuffle(allWords(puzzle())), selected: [] };
 function save() {
+  state.puzzleCount = PUZZLES.length;
   try { localStorage.setItem(KEY, JSON.stringify(state)); $('thread-save').textContent = 'Saved on this device'; }
   catch { $('thread-save').textContent = 'Progress won’t be saved'; }
 }
@@ -61,7 +62,7 @@ function render() {
   $('thread-result').hidden = status === 'playing';
   $('thread-result-title').textContent = status === 'won' ? 'All connected.' : 'Threads revealed.';
   $('thread-result-detail').textContent = status === 'won' ? `Four groups found · ${mistakes} mistakes.` : `${solved.length} of 4 found. Try another puzzle.`;
-  $('thread-next').textContent = state.results.length === PUZZLES.length ? 'View collection →' : 'Next puzzle →';
+  $('thread-next').textContent = state.results.length === PUZZLES.length ? 'Next pack →' : 'Next puzzle →';
 }
 $('thread-submit').addEventListener('click', () => {
   const result = submit(puzzle(), game(), game().selected);
@@ -76,9 +77,20 @@ $('thread-submit').addEventListener('click', () => {
 $('thread-shuffle').addEventListener('click', () => { game().order = shuffle(game().order); save(); render(); message('Words shuffled. Your selection is kept.'); });
 $('thread-clear').addEventListener('click', () => { game().selected = []; save(); render(); message('Selection cleared.'); });
 function collection() {
-  $('thread-summary').textContent = `${state.results.length} of ${PUZZLES.length} finished. Choose any puzzle; your progress is kept.`;
+  $('thread-summary').textContent = `${state.results.length} of ${PUZZLES.length} finished. New packs are added automatically when you finish. Categories may recur in new combinations.`;
+  const pack = $('thread-pack');
+  pack.replaceChildren();
+  for (let i = 0; i < Math.ceil(PUZZLES.length / 12); i++) { const option = new Option(`Pack ${i + 1} · puzzles ${i * 12 + 1}–${Math.min(PUZZLES.length, (i + 1) * 12)}`, String(i)); pack.add(option); }
+  pack.value = String(Math.floor(state.index / 12));
+  pack.onchange = drawCollection;
+  drawCollection();
+  $('thread-collection-dialog').showModal();
+}
+function drawCollection() {
   $('thread-puzzle-list').replaceChildren();
-  PUZZLES.forEach((p, index) => {
+  const first = Number($('thread-pack').value) * 12;
+  PUZZLES.slice(first, first + 12).forEach((p, offset) => {
+    const index = first + offset;
     const status = state.games[p.id] ? evaluate(p, state.games[p.id].attempts).status : 'playing';
     const button = document.createElement('button');
     button.className = `puzzle-choice ${status} ${state.index === index ? 'selected' : ''}`;
@@ -87,10 +99,14 @@ function collection() {
     button.addEventListener('click', () => { state.index = index; game(); save(); render(); $('thread-collection-dialog').close(); message('Find the common threads.'); });
     $('thread-puzzle-list').append(button);
   });
-  $('thread-collection-dialog').showModal();
 }
 $('thread-collection-button').addEventListener('click', collection);
 $('thread-next').addEventListener('click', () => {
+  if (state.results.length === PUZZLES.length) {
+    const firstNew = PUZZLES.length;
+    if (ensurePuzzleCount(firstNew + 12)) { state.index = firstNew; game(); save(); render(); message('A new pack of 12 puzzles is ready — enjoy!'); return; }
+    message('You’ve finished every available combination. More categories will arrive in an app update.'); collection(); return;
+  }
   for (let offset = 1; offset <= PUZZLES.length; offset++) {
     const index = (state.index + offset) % PUZZLES.length;
     if (!state.results.includes(PUZZLES[index].id)) {

@@ -1,5 +1,5 @@
-const CACHE = 'five-letters-v2';
-const FILES = ['./', './index.html', './styles.css', './app.js', './engine.js', './stats.js', './navigation.js', './thread.js', './thread-engine.js', './dictionary.json', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './DICTIONARY-LICENSE.txt'];
+const CACHE = 'five-letters-v3';
+const FILES = ['./', './index.html', './styles.css', './app.js', './engine.js', './stats.js', './navigation.js', './thread.js', './thread-engine.js', './trails.js', './trails-engine.js', './trails-puzzles.js', './trails-dictionary.txt', './dictionary.json', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './DICTIONARY-LICENSE.txt'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES.map(path => new Request(path, { cache: 'reload' })))));
 });
